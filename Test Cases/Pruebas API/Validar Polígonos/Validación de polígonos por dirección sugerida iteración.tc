@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestCaseEntity>
+   <description>Se creó un script para la validación de poligonos con el flujo de dirección sugerida, es decir se utilizan dos endpoints:
+- El primero que obtiene direcciones sugeridas en base a una dirección enviada, del response de este endpoint se obtiene el valor de place_id que se utiliza para el segundo endpoint
+- El segundo que con el place_id obtenido, obtiene toda la información incluido el poligono para poder validarlo con que se encuentra en el excel de prueba</description>
+   <name>Validación de polígonos por dirección sugerida iteración</name>
+   <tag></tag>
+   <comment></comment>
+   <recordOption>OTHER</recordOption>
+   <testCaseGuid>0f6ea273-3526-4afb-9a89-fdedbd85a754</testCaseGuid>
+</TestCaseEntity>

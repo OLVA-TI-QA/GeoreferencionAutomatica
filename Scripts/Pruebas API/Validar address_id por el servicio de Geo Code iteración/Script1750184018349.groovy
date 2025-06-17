@@ -15,6 +15,8 @@ import java.io.FileOutputStream
 import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.text.Normalizer
+import java.net.URLEncoder
 
 // Leer el Excel con direcciones no georeferenciadas | address_id == 0
 def data = TestDataFactory.findTestData('pruebasAPI/DireccionesNoGeoreferenciadasAddressId') // Archivo de datos que debe crearse
@@ -40,12 +42,16 @@ headers.add(new TestObjectProperty("x-api-key", ConditionType.EQUALS, "\$2y\$10\
 for (int i = 1; i <= data.getRowNumbers(); i++) {
 	def nro = data.getValue('NRO', i)
 	
+	// Normalizar acentos: áéíóúñ -> aeioun
+	direccion = Normalizer.normalize(direccion, Normalizer.Form.NFD)
+	direccion = direccion.replaceAll("\\p{InCombiningDiacriticalMarks}+", "")
+	
 	// Validaciones para que se las direcciones se puedan pasar por el endpoint
 	def direccion = data.getValue('DIRECCIONES', i)
 	direccion = direccion.replaceAll("[\\u00A0\\u2007\\u202F\\)\\(\\\"\\,\\:\\.\\;\\-º]", " ")
 	direccion = direccion.replaceAll("\\u0099", "  ")
-	direccion = direccion.replaceAll("[^\\x00-\\x7F]", "")
 	direccion = direccion.replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "  ")
+	direccion = direccion.replaceAll("[^\\x00-\\x7F]", "")
 	String direccionSinEspacios = URLEncoder.encode(direccion, "UTF-8").replace("+", "%20")
 	
 	// Agregar 0 faltantes en Ubigeos Enviados
