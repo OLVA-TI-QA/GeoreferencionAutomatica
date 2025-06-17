@@ -3,6 +3,8 @@ import java.util.regex.*
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.*
 import java.io.FileOutputStream
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 class DireccionValidator {
 
@@ -57,7 +59,10 @@ class DireccionValidator {
 			row.createCell(4).setCellValue(errores.join("; ") ?: "Correcta")
 		}
 
-		String archivo = "Validacion_Direcciones.xlsx"
+		// Obtener la fecha actual en formato ddMMyyyy_HHmmss
+		def fechaHoraActual = LocalDateTime.now().format(DateTimeFormatter.ofPattern("ddMMyyyy_HHmmss"))
+		// Crear el nombre del archivo con la fecha
+		String archivo = "Resultados_Validacion_Normalizacion_Direcciones_${fechaHoraActual}.xlsx"
 		FileOutputStream out = new FileOutputStream(archivo)
 		workbook.write(out)
 		out.close()

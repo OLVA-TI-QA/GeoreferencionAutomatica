@@ -13,6 +13,8 @@ import org.apache.poi.ss.usermodel.*
 
 import java.io.FileOutputStream
 import java.nio.file.Paths
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 // Leer el Excel con direcciones y polígonos
 def data = TestDataFactory.findTestData('pruebasAPI/DireccionesConPoligonos') // Archivo de datos que debe crearse
@@ -92,7 +94,11 @@ for (int i = 1; i <= data.getRowNumbers(); i++) {
 	}
 	
 	// Crear el request para el segundo endpoint
+	// Ruta en producción
 	String getAddressInfoUrl = "https://geo-api.olvaexpress.pe/api/v2/geo/code/?addressId=${addressIdSuggested}"
+	// Ruta en desarrollo
+	// String getAddressInfoUrl = "https://geo-api-dev.olvaexpress.pe/api/v2/geo/code/?addressId=${addressIdSuggested}"
+	
 	getAddressInfoRequest.setRestUrl(getAddressInfoUrl)
 	getAddressInfoRequest.setHttpHeaderProperties(headers)
 	
@@ -166,8 +172,13 @@ excelHeaders.eachWithIndex { _, idx ->
 	sheet.autoSizeColumn(idx)
 }
 
-// Guardar el archivo
-def outputPath = Paths.get(RunConfiguration.getProjectDir(), "Resultados_Validacion_DireccionSugerida.xlsx").toString()
+// Obtener la fecha actual en formato ddMMyyyy_HHmmss
+def fechaHoraActual = LocalDateTime.now().format(DateTimeFormatter.ofPattern("ddMMyyyy_HHmmss"))
+// Crear el nombre del archivo con la fecha
+def nombreArchivo = "Resultados_Validacion_Poligonos_DireccionSugerida_${fechaHoraActual}.xlsx"
+// Construir la ruta completa al archivo
+def outputPath = Paths.get(RunConfiguration.getProjectDir(), nombreArchivo).toString()
+
 FileOutputStream fileOut = new FileOutputStream(outputPath)
 workbook.write(fileOut)
 fileOut.close()

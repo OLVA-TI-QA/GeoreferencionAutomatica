@@ -166,7 +166,7 @@ excelHeaders.eachWithIndex { _, idx ->
 def fechaHoraActual = LocalDateTime.now().format(DateTimeFormatter.ofPattern("ddMMyyyy_HHmmss"))
 
 // Crear el nombre del archivo con la fecha
-def nombreArchivo = "Resultados_Validacion_Georeferenciacion_DireccionUbigeo_${fechaHoraActual}.xlsx"
+def nombreArchivo = "Resultados_Validacion_address_id_DireccionUbigeo_${fechaHoraActual}.xlsx"
 
 // Construir la ruta completa al archivo
 def outputPath = Paths.get(RunConfiguration.getProjectDir(), nombreArchivo).toString()

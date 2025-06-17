@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <TestCaseEntity>
-   <description>Se creo un script para poder validar desde la conexión BD con una consulta que las direcciones se esten normalizando correctamente, los formatos de validación se extrajeron de un archivo que compratió Jose para sus pruebas. Este script contiene validaciones:
+   <description>Se creo un script para poder validar desde la conexión BD con una consulta que las direcciones se esten normalizando correctamente. Este script contiene validaciones:
 - Texto posterior a guion
 - Contiene número telefónico
 - Inicia con nombre de ciudad

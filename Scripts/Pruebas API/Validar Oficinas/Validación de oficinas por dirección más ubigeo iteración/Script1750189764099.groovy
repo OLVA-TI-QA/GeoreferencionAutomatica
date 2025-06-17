@@ -15,18 +15,19 @@ import java.io.FileOutputStream
 import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.text.Normalizer
+import java.net.URLEncoder
 
-// Leer el Excel con direcciones y polígonos
-def data = TestDataFactory.findTestData('pruebasAPI/DireccionesConPoligonos') // Archivo de datos que debe crearse
+// Leer el Excel con direcciones de oficinas
+def data = TestDataFactory.findTestData('pruebasAPI/DataDeOficinasLima') // Archivo de datos que debe crearse
 
 // Validar que el archivo de datos existe y tiene datos
-assert data != null : "Archivo de datos 'DireccionesConPoligonos' no encontrado"
-assert data.getRowNumbers() > 0 : "Archivo de datos 'DireccionesConPoligonos' no contiene registros"
+assert data != null : "Archivo de datos 'DataDeOficinasLima' no encontrado"
+assert data.getRowNumbers() > 0 : "Archivo de datos 'DataDeOficinasLima' no contiene registros"
 
 // ======================================
 // Lista para almacenar resultados para validación posterior
 def resultadosValidacion = []
-boolean coincidePoligono = false
 
 // Crear el request para el endpoint de creación de tracking
 RequestObject addressUbigeoRequest = new RequestObject()
@@ -40,23 +41,33 @@ headers.add(new TestObjectProperty("x-api-key", ConditionType.EQUALS, "\$2y\$10\
 // Iterar por cada fila del Excel
 for (int i = 1; i <= data.getRowNumbers(); i++) {
 	def nro = data.getValue('NRO', i)
-	
 	def direccion = data.getValue('DIRECCIONES', i)
-	direccion = direccion.replaceAll("[\\u00A0\\u2007\\u202F]", " ")
-	String direccionSinEspacios = direccion.replace(" ", "%20")
+	
+	// Normalizar acentos: áéíóúñ -> aeioun
+	direccion = Normalizer.normalize(direccion, Normalizer.Form.NFD)
+	direccion = direccion.replaceAll("\\p{InCombiningDiacriticalMarks}+", "")
+	
+	// Validaciones para que se las direcciones se puedan pasar por el endpoint
+	direccion = direccion.replaceAll("[\\u00A0\\u2007\\u202F\\)\\(\\\"\\,\\:\\.\\;\\-º]", " ")
+	direccion = direccion.replaceAll("\\u0099", "  ")
+	direccion = direccion.replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "  ")
+	direccion = direccion.replaceAll("[^\\x00-\\x7F]", "")
+	String direccionSinEspacios = URLEncoder.encode(direccion, "UTF-8").replace("+", "%20")
 	
 	def ubigeo = data.getValue('CODUBIGEO', i)
 	String ubigeoCompletado = ubigeo.toString().padLeft(6, '0')
-	def poligonoEsperado = data.getValue('POLIGONO', i)
+	
+	def nombreOficina = data.getValue('NOMBREOFICINA', i)
+	def idAddress = data.getValue('IDADDRESS', i)
 
 	KeywordUtil.logInfo("Procesando registro #${nro}: ${direccion}")
 	
 	// Ruta en desarrollo
-	String addressSuggestedUrl = "https://geo-api-dev.olvaexpress.pe/api/v2/geo/code/?address=${direccionSinEspacios}&ubigeo=${ubigeoCompletado}"
+	String fullUrl = "https://geo-api-dev.olvaexpress.pe/api/v2/geo/code/?address=${direccionSinEspacios}&ubigeo=${ubigeoCompletado}"
 	// Ruta en producción
-	// String addressSuggestedUrl = "https://geo-api.olvaexpress.pe/api/v2/geo/code/?address=${direccionSinEspacios}&ubigeo=${ubigeoCompletado}"
+	//String fullUrl = "https://geo-api.olvaexpress.pe/api/v2/geo/code/?address=${direccionSinEspacios}&ubigeo=${ubigeoCompletado}"
 	
-	addressUbigeoRequest.setRestUrl(addressSuggestedUrl)
+	addressUbigeoRequest.setRestUrl(fullUrl)
 	addressUbigeoRequest.setHttpHeaderProperties(headers)
 	
 	// Enviar request
@@ -71,51 +82,54 @@ for (int i = 1; i <= data.getRowNumbers(); i++) {
 		def respuestaJson = new JsonSlurper().parseText(responseBody)
 
 		// Validar campos requeridos
-		if (!respuestaJson.address || !respuestaJson.polygon) {
+		if (!respuestaJson.address) {
 			KeywordUtil.markWarning("⚠️ Respuesta incompleta para registro #${nro}. No se encontró address o polygon.")
 
 			resultadosValidacion.add([
 				nro: nro,
-				direccion: direccion,
-				poligonoEsperado: poligonoEsperado,
-				poligonoObtenido: "SIN RESULTADOS",
-				coincide: false
+				direccionEnviada: direccion,
+				direccionObtenida: "SIN RESULTADOS",
+				codUbigeoEnviado: ubigeo,
+				codUbigeoObtenido: "SIN RESULTADOS",
+				oficina: false,
+				idAddress: idAddress,
+				nombreOficina: nombreOficina
 			])
 			continue
 		}
 
+		def codUbigeoObtenido = respuestaJson.ubigeo
 		def direccionObtenida = respuestaJson.address
-		def poligonoObtenido = respuestaJson.polygon
-		coincidePoligono = (poligonoObtenido == poligonoEsperado)
+		def isOffice = respuestaJson.office
 		
 		resultadosValidacion.add([
 			nro: nro,
-			direccion: direccionObtenida,
-			poligonoEsperado: poligonoEsperado,
-			poligonoObtenido: poligonoObtenido,
-			coincide: coincidePoligono
+			direccionEnviada: direccion,
+			direccionObtenida: direccionObtenida,
+			codUbigeoEnviado: ubigeo,
+			codUbigeoObtenido: codUbigeoObtenido,
+			oficina: isOffice,
+			idAddress: idAddress,
+			nombreOficina: nombreOficina
 		])
-		
-		if (coincidePoligono) {
-			KeywordUtil.logInfo("✅ Polígono coincide para registro #${nro}")
-		} else {
-			KeywordUtil.markWarning("⚠️ Polígono NO coincide para registro #${nro}. Esperado: ${poligonoEsperado}, Obtenido: ${poligonoObtenido}")
-		}
 	} else {
 		KeywordUtil.markWarning("⚠️ No se obtuvo contenido para registro #${nro} (Status code: ${statusCode})")
 		resultadosValidacion.add([
 			nro: nro,
-			direccion: direccion,
-			poligonoEsperado: poligonoEsperado,
-			poligonoObtenido: "SIN RESULTADOS",
-			coincide: false
+			direccionEnviada: direccion,
+			direccionObtenida: "SIN RESULTADOS",
+			codUbigeoEnviado: ubigeo,
+			codUbigeoObtenido: "SIN RESULTADOS",
+			oficina: false,
+			idAddress: idAddress,
+			nombreOficina: nombreOficina
 		])
 	}
 }
 
 // Resumen final
 int totalRegistros = resultadosValidacion.size()
-int exitosos = resultadosValidacion.count { it.coincide }
+int exitosos = resultadosValidacion.count { it.oficina == true }
 int fallidos = totalRegistros - exitosos
 
 // Crear el archivo Excel
@@ -123,7 +137,7 @@ Workbook workbook = new XSSFWorkbook()
 Sheet sheet = workbook.createSheet("Resultados Validación")
 
 // Crear fila de encabezados
-def excelHeaders = ["NRO", "DIRECCIÓN", "POLÍGONO ESPERADO", "POLÍGONO OBTENIDO", "COINCIDE"]
+def excelHeaders = ["NRO", "DIRECCIÓN ENVIADA", "DIRECCIÓN OBTENIDA", "CODUBIGEO ENVIADO", "CODUBIGEO OBTENIDO", "OFICINA", "ID ADDRESS", "NOMBRE OFICINA"]
 Row headerRow = sheet.createRow(0)
 excelHeaders.eachWithIndex { header, idx ->
 	Cell cell = headerRow.createCell(idx)
@@ -134,10 +148,13 @@ excelHeaders.eachWithIndex { header, idx ->
 resultadosValidacion.eachWithIndex { resultado, index ->
 	Row row = sheet.createRow(index + 1)
 	row.createCell(0).setCellValue(resultado.nro.toString())
-	row.createCell(1).setCellValue(resultado.direccion)
-	row.createCell(2).setCellValue(resultado.poligonoEsperado)
-	row.createCell(3).setCellValue(resultado.poligonoObtenido)
-	row.createCell(4).setCellValue(resultado.coincide.toString())
+	row.createCell(1).setCellValue(resultado.direccionEnviada)
+	row.createCell(2).setCellValue(resultado.direccionObtenida)
+	row.createCell(3).setCellValue(resultado.codUbigeoEnviado.toString())
+	row.createCell(4).setCellValue(resultado.codUbigeoObtenido)
+	row.createCell(5).setCellValue(resultado.oficina.toString())
+	row.createCell(6).setCellValue(resultado.idAddress.toString())
+	row.createCell(7).setCellValue(resultado.nombreOficina)
 }
 
 // Ajustar tamaño de columnas
@@ -149,7 +166,7 @@ excelHeaders.eachWithIndex { _, idx ->
 def fechaHoraActual = LocalDateTime.now().format(DateTimeFormatter.ofPattern("ddMMyyyy_HHmmss"))
 
 // Crear el nombre del archivo con la fecha
-def nombreArchivo = "Resultados_Validacion_Poligonos_DireccionUbigeo_${fechaHoraActual}.xlsx"
+def nombreArchivo = "Resultados_Validacion_Oficina_DireccionUbigeo_${fechaHoraActual}.xlsx"
 
 // Construir la ruta completa al archivo
 def outputPath = Paths.get(RunConfiguration.getProjectDir(), nombreArchivo).toString()
@@ -161,8 +178,8 @@ workbook.close()
 KeywordUtil.logInfo("📁 Archivo Excel generado: ${outputPath}")
 KeywordUtil.logInfo("📊 Resumen de validación:")
 KeywordUtil.logInfo("- Total registros procesados: ${totalRegistros}")
-KeywordUtil.logInfo("- Polígonos coincidentes: ${exitosos}")
-KeywordUtil.logInfo("- Polígonos no coincidentes: ${fallidos}")
+KeywordUtil.logInfo("- Oficinas validadas correctamente: ${exitosos}")
+KeywordUtil.logInfo("- Oficinas validadas incorrectas: ${fallidos}")
 
 // Verificación final (pasa si todos los polígonos coinciden)
-assert exitosos == totalRegistros : "Hay ${fallidos} polígonos que no coinciden con los esperados"
+assert exitosos == totalRegistros : "Hay ${exitosos.toString()} de ${totalRegistros.toString()} oficinas que fueron validadas"
