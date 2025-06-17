@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestCaseEntity>
+   <description>Se creo un script para poder validar desde la conexión BD con una consulta que las direcciones se esten normalizando correctamente, los formatos de validación se extrajeron de un archivo que compratió Jose para sus pruebas. Este script contiene validaciones:
+- Texto posterior a guion
+- Contiene número telefónico
+- Inicia con nombre de ciudad
+- Dirección institucional o de asentamiento
+- Contiene término de lote/manzana
+- Dirección sin número
+- Palabra o número duplicado
+- Contiene palabra 'referencia'
+- Caracter especial
+- No se normalizó</description>
+   <name>Validar normalización de direcciones</name>
+   <tag></tag>
+   <comment></comment>
+   <recordOption>OTHER</recordOption>
+   <testCaseGuid>1ee12215-3317-4968-a8c7-243fa280bbb5</testCaseGuid>
+</TestCaseEntity>
