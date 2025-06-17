@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestCaseEntity>
+   <description>Este script fue desarrollado con el propósito de validar direcciones utilizando el servicio Geo Code. El proceso se basa en el envío de un archivo Excel que contiene columnas con direcciones y códigos de Ubigeo. Como resultado, el servicio retorna una estructura de datos que indica si cada dirección puede ser georreferenciada correctamente o no.</description>
+   <name>Validar address_id por el servicio de Geo Code</name>
+   <tag></tag>
+   <comment></comment>
+   <recordOption>OTHER</recordOption>
+   <testCaseGuid>9ab403b9-a913-4d6b-adc1-a876b73080dd</testCaseGuid>
+</TestCaseEntity>
