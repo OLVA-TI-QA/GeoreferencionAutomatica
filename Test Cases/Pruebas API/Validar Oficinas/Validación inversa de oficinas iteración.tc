@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestCaseEntity>
+   <description>Validación de oficinas mediante georreferenciación inversa (lon,lat) - Geo Reversa</description>
+   <name>Validación inversa de oficinas iteración</name>
+   <tag></tag>
+   <comment></comment>
+   <recordOption>OTHER</recordOption>
+   <testCaseGuid>8fd0e534-a959-429a-8d78-aee281ffc193</testCaseGuid>
+</TestCaseEntity>

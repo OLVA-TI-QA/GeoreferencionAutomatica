@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestCaseEntity>
+   <description>Se creo un script para la validación de oficinas mediante dirección + ubigeo es decir utilizando el servicio de Geo Code, en este script se validará si las direcciones enviadas perteneces a oficinas</description>
+   <name>Validación de oficinas por dirección más ubigeo iteración</name>
+   <tag></tag>
+   <comment></comment>
+   <recordOption>OTHER</recordOption>
+   <testCaseGuid>b8e765a3-8f52-44b6-86d4-7aba19a58dec</testCaseGuid>
+</TestCaseEntity>

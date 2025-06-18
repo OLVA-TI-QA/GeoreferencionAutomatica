@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestCaseEntity>
+   <description></description>
+   <name>Validación de polígonos por dirección más ubigeo iteración</name>
+   <tag></tag>
+   <comment></comment>
+   <recordOption>OTHER</recordOption>
+   <testCaseGuid>50f29fb6-99af-44b6-8e0e-1998ea6a7bd1</testCaseGuid>
+</TestCaseEntity>

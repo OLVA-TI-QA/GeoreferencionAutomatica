@@ -16,3 +16,12 @@ build
 .project
 
 .cache
+/.DS_Store
+
+# Ignorar archivos de resultados con nombre dinámico
+Resultados_Validacion_Oficina_DireccionUbigeo*
+Resultados_Validacion_Oficina_LongLat*
+Resultados_Validacion_Poligonos_DireccionUbigeo*
+Resultados_Validacion_Poligonos_DireccionSugerida*
+Resultados_Validacion_address_id_DireccionUbigeo*
+Resultados_Validacion_Normalizacion_Direcciones*
