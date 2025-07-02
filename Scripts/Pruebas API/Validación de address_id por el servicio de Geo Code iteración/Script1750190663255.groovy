@@ -42,12 +42,13 @@ headers.add(new TestObjectProperty("x-api-key", ConditionType.EQUALS, "\$2y\$10\
 for (int i = 1; i <= data.getRowNumbers(); i++) {
 	def nro = data.getValue('NRO', i)
 	
+	// Validaciones para que se las direcciones se puedan pasar por el endpoint
+	def direccion = data.getValue('DIRECCIONES', i)
 	// Normalizar acentos: áéíóúñ -> aeioun
 	direccion = Normalizer.normalize(direccion, Normalizer.Form.NFD)
 	direccion = direccion.replaceAll("\\p{InCombiningDiacriticalMarks}+", "")
 	
 	// Validaciones para que se las direcciones se puedan pasar por el endpoint
-	def direccion = data.getValue('DIRECCIONES', i)
 	direccion = direccion.replaceAll("[\\u00A0\\u2007\\u202F\\)\\(\\\"\\,\\:\\.\\;\\-º]", " ")
 	direccion = direccion.replaceAll("\\u0099", "  ")
 	direccion = direccion.replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "  ")
