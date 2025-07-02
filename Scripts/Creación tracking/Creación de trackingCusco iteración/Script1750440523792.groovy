@@ -10,7 +10,7 @@ import groovy.json.*
 // ======================================
 // Configuración inicial
 // ======================================
-int baseCodigoOptitrack = 50000
+int baseCodigoOptitrack = 48000
 TestData datosDirecciones = TestDataFactory.findTestData("pruebasAPI/DireccionesTrackingUbigeosTodosLosCasos")
 
 
@@ -50,14 +50,14 @@ for (int i = 1; i <= datosDirecciones.getRowNumbers(); i++) {
         "parentOpti": null,
         "codigoOptitrack": codigoOptitrack,
         "idRecojo": null,
-        "idSede": 13,
-        "idOficina": 202,
+        "idSede": 174,
+        "idOficina": 342,
         "direccionEntrega": direccion,
         "decJurada": 0,
         "decJuradaMonto": 5555,
         "cargoAjuntoCant": 0,
         "idPersJurArea": "314061",
-        "consignado": "TIENDA OECHSLE - LIMA   ANDREA SILVA  DIGNA CONDORI",
+        "consignado": "Pruebas Alem origen Cusco",
         "consignadoTelf": "949078370",
         "consignadoDni": "",
         "codExterno": "950534987",

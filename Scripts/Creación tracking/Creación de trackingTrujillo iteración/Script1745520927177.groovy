@@ -10,8 +10,8 @@ import groovy.json.*
 // ======================================
 // Configuración inicial
 // ======================================
-int baseCodigoOptitrack = 1600
-TestData datosDirecciones = TestDataFactory.findTestData("Data Files/DireccionesExcel")
+int baseCodigoOptitrack = 50000
+TestData datosDirecciones = TestDataFactory.findTestData("pruebasAPI/DireccionesTrackingUbigeosTodosLosCasos")
 
 
 // ======================================
@@ -57,7 +57,7 @@ for (int i = 1; i <= datosDirecciones.getRowNumbers(); i++) {
         "decJuradaMonto": 5555,
         "cargoAjuntoCant": 0,
         "idPersJurArea": "314061",
-        "consignado": "TIENDA OECHSLE - LIMA   ANDREA SILVA  DIGNA CONDORI",
+        "consignado": "Pruebas Alem origen Trujillo",
         "consignadoTelf": "949078370",
         "consignadoDni": "",
         "codExterno": "950534987",

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DataFileEntity>
+   <description></description>
+   <name>DireccionesTrackingUbigeosTodosLosCasos</name>
+   <tag></tag>
+   <connectionProperties/>
+   <containsHeaders>true</containsHeaders>
+   <csvSeperator></csvSeperator>
+   <dataFileGUID>989a8988-dc39-4742-b205-cd5bcd291e69</dataFileGUID>
+   <dataSourceUrl>/Users/alemcita/git/GeoreferencionAutomatica/DireccionesTrackingUbigeosTodosLosCasos.xlsx</dataSourceUrl>
+   <driver>ExcelFile</driver>
+   <isInternalPath>false</isInternalPath>
+   <query></query>
+   <secureUserAccount>false</secureUserAccount>
+   <sheetName>DireccionesLimaCaracteres</sheetName>
+   <usingGlobalDBSetting>false</usingGlobalDBSetting>
+</DataFileEntity>
