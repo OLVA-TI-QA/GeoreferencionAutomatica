@@ -15,13 +15,15 @@ import java.io.FileOutputStream
 import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.text.Normalizer
+import java.net.URLEncoder
 
 // Leer el Excel con direcciones y polígonos
-def data = TestDataFactory.findTestData('pruebasAPI/DireccionesConPoligonos') // Archivo de datos que debe crearse
+def data = TestDataFactory.findTestData("pruebasAPI/DireccionesConPoligonosDesarrollo") // Archivo de datos que debe crearse
 
 // Validar que el archivo de datos existe y tiene datos
-assert data != null : "Archivo de datos 'DireccionesConPoligonos' no encontrado"
-assert data.getRowNumbers() > 0 : "Archivo de datos 'DireccionesConPoligonos' no contiene registros"
+assert data != null : "Archivo de datos 'DireccionesConPoligonosDesarrollo' no encontrado"
+assert data.getRowNumbers() > 0 : "Archivo de datos 'DireccionesConPoligonosDesarrollo' no contiene registros"
 
 // ======================================
 // Lista para almacenar resultados para validación posterior
@@ -42,8 +44,16 @@ for (int i = 1; i <= data.getRowNumbers(); i++) {
 	def nro = data.getValue('NRO', i)
 	
 	def direccion = data.getValue('DIRECCIONES', i)
-	direccion = direccion.replaceAll("[\\u00A0\\u2007\\u202F]", " ")
-	String direccionSinEspacios = direccion.replace(" ", "%20")
+	// Normalizar acentos: áéíóúñ -> aeioun
+	direccion = Normalizer.normalize(direccion, Normalizer.Form.NFD)
+	direccion = direccion.replaceAll("\\p{InCombiningDiacriticalMarks}+", "")
+	
+	// Validaciones para que se las direcciones se puedan pasar por el endpoint
+	direccion = direccion.replaceAll("[\\u00A0\\u2007\\u202F\\)\\(\\\"\\,\\:\\.\\;\\-º]", " ")
+	direccion = direccion.replaceAll("\\u0099", "  ")
+	direccion = direccion.replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "  ")
+	direccion = direccion.replaceAll("[^\\x00-\\x7F]", "")
+	String direccionSinEspacios = URLEncoder.encode(direccion, "UTF-8").replace("+", "%20")
 	
 	def ubigeo = data.getValue('CODUBIGEO', i)
 	String ubigeoCompletado = ubigeo.toString().padLeft(6, '0')
@@ -70,30 +80,53 @@ for (int i = 1; i <= data.getRowNumbers(); i++) {
 		
 		def respuestaJson = new JsonSlurper().parseText(responseBody)
 
-		// Validar campos requeridos
-		if (!respuestaJson.address || !respuestaJson.polygon) {
-			KeywordUtil.markWarning("⚠️ Respuesta incompleta para registro #${nro}. No se encontró address o polygon.")
+		// Validar si hay response
+		if (!respuestaJson.address) {
+			KeywordUtil.markWarning("⚠️ Respuesta incompleta para registro #${nro}. No se encontró address.")
 
 			resultadosValidacion.add([
 				nro: nro,
-				direccion: direccion,
+				direccionEnviada: direccion,
+				direccionObtenida: "SIN RESULTADOS",
 				poligonoEsperado: poligonoEsperado,
 				poligonoObtenido: "SIN RESULTADOS",
-				coincide: false
+				coincide: false,
+				zonaPeligrosa: isZonaPeligrosa
 			])
 			continue
 		}
-
+		
+		// Obtener el valor para zona peligrosa
+		def isZonaPeligrosa = respuestaJson.dangerous
 		def direccionObtenida = respuestaJson.address
+		
+		// Validar si polígono está vacío aún con response
+		if (!respuestaJson.polygon) {
+			KeywordUtil.markWarning("⚠️ Respuesta incompleta para registro #${nro}. No se encontró address.")
+
+			resultadosValidacion.add([
+				nro: nro,
+				direccionEnviada: direccion,
+				direccionObtenida: direccionObtenida,
+				poligonoEsperado: poligonoEsperado,
+				poligonoObtenido: "SIN RESULTADOS",
+				coincide: false,
+				zonaPeligrosa: isZonaPeligrosa
+			])
+			continue
+		}
+		
 		def poligonoObtenido = respuestaJson.polygon
 		coincidePoligono = (poligonoObtenido == poligonoEsperado)
 		
 		resultadosValidacion.add([
 			nro: nro,
-			direccion: direccionObtenida,
+			direccionEnviada: direccion,
+			direccionObtenida: direccionObtenida,
 			poligonoEsperado: poligonoEsperado,
 			poligonoObtenido: poligonoObtenido,
-			coincide: coincidePoligono
+			coincide: coincidePoligono,
+			zonaPeligrosa: isZonaPeligrosa
 		])
 		
 		if (coincidePoligono) {
@@ -105,10 +138,12 @@ for (int i = 1; i <= data.getRowNumbers(); i++) {
 		KeywordUtil.markWarning("⚠️ No se obtuvo contenido para registro #${nro} (Status code: ${statusCode})")
 		resultadosValidacion.add([
 			nro: nro,
-			direccion: direccion,
+			direccionEnviada: direccion,
+			direccionObtenida: "SIN RESULTADOS",
 			poligonoEsperado: poligonoEsperado,
 			poligonoObtenido: "SIN RESULTADOS",
-			coincide: false
+			coincide: false,
+			zonaPeligrosa: false
 		])
 	}
 }
@@ -123,7 +158,7 @@ Workbook workbook = new XSSFWorkbook()
 Sheet sheet = workbook.createSheet("Resultados Validación")
 
 // Crear fila de encabezados
-def excelHeaders = ["NRO", "DIRECCIÓN", "POLÍGONO ESPERADO", "POLÍGONO OBTENIDO", "COINCIDE"]
+def excelHeaders = ["NRO", "DIRECCIÓN ENVIADA", "DIRECCIÓN OBTENIDA", "POLÍGONO ESPERADO", "POLÍGONO OBTENIDO", "COINCIDE", "ZONA PELIGROSA"]
 Row headerRow = sheet.createRow(0)
 excelHeaders.eachWithIndex { header, idx ->
 	Cell cell = headerRow.createCell(idx)
@@ -134,10 +169,12 @@ excelHeaders.eachWithIndex { header, idx ->
 resultadosValidacion.eachWithIndex { resultado, index ->
 	Row row = sheet.createRow(index + 1)
 	row.createCell(0).setCellValue(resultado.nro.toString())
-	row.createCell(1).setCellValue(resultado.direccion)
-	row.createCell(2).setCellValue(resultado.poligonoEsperado)
-	row.createCell(3).setCellValue(resultado.poligonoObtenido)
-	row.createCell(4).setCellValue(resultado.coincide.toString())
+	row.createCell(1).setCellValue(resultado.direccionEnviada)
+	row.createCell(2).setCellValue(resultado.direccionObtenida)
+	row.createCell(3).setCellValue(resultado.poligonoEsperado)
+	row.createCell(4).setCellValue(resultado.poligonoObtenido)
+	row.createCell(5).setCellValue(resultado.coincide.toString())
+	row.createCell(6).setCellValue(resultado.zonaPeligrosa.toString())
 }
 
 // Ajustar tamaño de columnas

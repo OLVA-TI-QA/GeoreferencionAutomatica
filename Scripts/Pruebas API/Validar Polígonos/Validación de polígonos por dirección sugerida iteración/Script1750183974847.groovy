@@ -17,11 +17,11 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 // Leer el Excel con direcciones y polígonos
-def data = TestDataFactory.findTestData('pruebasAPI/DireccionesConPoligonos') // Archivo de datos que debe crearse
+def data = TestDataFactory.findTestData("pruebasAPI/DireccionesConPoligonosDesarrollo") // Archivo de datos que debe crearse
 
 // Validar que el archivo de datos existe y tiene datos
-assert data != null : "Archivo de datos 'DireccionesConPoligonos' no encontrado"
-assert data.getRowNumbers() > 0 : "Archivo de datos 'DireccionesConPoligonos' no contiene registros"
+assert data != null : "Archivo de datos 'DireccionesConPoligonosDesarrollo' no encontrado"
+assert data.getRowNumbers() > 0 : "Archivo de datos 'DireccionesConPoligonosDesarrollo' no contiene registros"
 
 // ======================================
 // Lista para almacenar resultados para validación posterior
